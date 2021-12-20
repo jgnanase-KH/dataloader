@@ -1,0 +1,55 @@
+name: "CodeQL Analysis"
+
+# Schedule workflow with 30 min cron for testing purposes
+on:
+  push:
+    # Execute pipeline on push and pull when changes made to source folder
+    branches: 
+      - '*'
+  pull_request:
+    branches: 
+      - '*' 
+  #schedule:
+    # - cron: '0 12 * * 5'
+    # Manual execution trigger: Actions tab -> Pipeline in workflow list -> Run workflow
+  # Note: This can only work only if the workflow has successfully ran at least once
+  workflow_dispatch:
+
+jobs:
+  CodeQL-Build:
+    runs-on: ubuntu-latest
+    permissions:
+      # required for all workflows
+      security-events: write
+      # only required for workflows in private repositories
+      actions: read
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'java' ]
+        # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python' ]
+
+    # Use default environment variables: ex. ${GITHUB_REPOSITORY}
+    steps:
+      - name: Checkout repository
+        id: checkout_repo
+        uses: actions/checkout@v2
+
+      # Initializes the CodeQL tools for scanning.
+      - name: Initialize CodeQL
+        id: init_codeql
+        uses: github/codeql-action/init@v1
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-and-quality
+
+      # Uncomment this if the repo language is not JavaScript or Python
+      - name: Autobuild
+        id: autobuild
+        uses: github/codeql-action/autobuild@v1
+      
+      - name: Perform CodeQL Analysis
+        id: analyze_codeql
+        uses: github/codeql-action/analyze@v1
